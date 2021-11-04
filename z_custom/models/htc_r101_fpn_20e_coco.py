@@ -5,5 +5,5 @@ model = dict(
         init_cfg=dict(type='Pretrained',
                       checkpoint='torchvision://resnet101')))
 # learning policy
-lr_config = dict(step=[16, 19])
-runner = dict(type='EpochBasedRunner', max_epochs=20)
+lr_config = dict(step=[8, 11])
+runner = dict(type='EpochBasedRunner', max_epochs=12)

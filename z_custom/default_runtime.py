@@ -1,4 +1,4 @@
-checkpoint_config = dict(interval=1)
+checkpoint_config = dict(max_keep_ckpts=3, interval=1)
 # yapf:disable
 log_config = dict(
     interval=50,
@@ -6,8 +6,8 @@ log_config = dict(
         dict(type='TextLoggerHook'),
         dict(type='WandbLoggerHook',
         init_kwargs = dict(
-            project = 'mmdetection',
-            name = 'htc 12 sgd'
+            project = 'mmdetection_segmentation',
+            name = 'swin-L htc'
         ))
     ])
 # yapf:enable                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
