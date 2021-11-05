@@ -1,33 +1,27 @@
 # MMDetection
-
 ## Config
+mmdetection download
 ```
-mmdet_config
-│  └─default_runtime.py
-├─datasets
-│  ├─recycle_dataset.py
-│  ├─recycle_dataset_albu.py
-│  ├─recycle_dataset_cascade.py
-│  └─recycle_dataset_pseudo_labeling.py
-├─models
-│  ├─cascade_rcnn
-│  │  └─cascade_rcnn_r50_fpn.py
-│  ├─htc
-│  │  └─htc_soft-nms_without_mask_r50_fpn_1x_coco.py
-│  └─swin
-│     ├─swin-s_fpn_htc_soft-nms_AdamW-2x.py
-│     ├─swin-t_fpn_cascade_rcnn_AdamW-24e.py
-│     └─swin-t_fpn_cascade_rcnn_pseudo_labeling.py
-└─schedules
-   ├─schedule_1x.py
-   ├─schedule_1x_AdamW.py
-   ├─schedule_20e.py
-   ├─schedule_20e_AdamW.py
-   ├─schedule_2x.py
-   └─schedule_3x_AdamW.py
+git clone https://github.com/open-mmlab/mmdetection.git
 ```
 
-### TTA를 위한 코드 수정
+- 처음 train dataset을 이용해 학습할 때
+```
+python ./tools/train.py swin_L384.py
+```
+## pseudo labeling
+필수조건 : 처음 train dataset을 이용해 학습한 후, .pth file이 work_dir/swin_L384 디렉토리 내에 있음을 확인합니다.
+### 실행 방법
+- pseudo_labeling.py 를 실행합니다.
+- merge_image 디렉토리에 mixed image와 이에 대한 json 파일이 있음을 확인합니다.
+<br>
+
+- train dataset과 mixed dataset을 이용해 학습할 때
+```
+python ./tools/train.py swin_L384V2.py
+```
+
+## TTA를 위한 코드 수정
 일부 Aug가 `samples_per_gpu`가 1인 경우에만 작동을 하여 해당 코드를 수정합니다.
 - mmdet/apis/train.py#L144
   ```diff
@@ -40,38 +34,32 @@ mmdet_config
     shuffle=False)
   ```
 
+
 ## Model
-MMDetection에서는 3개 모델을 이용하여 학습을 진행하였습니다.
-
-1. swin-t_img-768_AdamW-24e.py
-
-2. swin-t_img-768_AdamW-24e_pseudo_labeling.py
-
-3. swin-s_fpn_htc_soft-nms_AdamW-2x.py
+- swin_L HTC
+  - pretrained weight imageNet 22K, [swin_L weight github](https://github.com/microsoft/Swin-Transformer)
+  - window_size, image size 384X384
 
 ## Backbone - Swin Transformer
-backbone 모델로 모두 swin transformer를 기반으로 하여 학습을 진행하였습니다.
+backbone 모델로 swin transformer를 기반으로 하여 학습을 진행하였습니다.
 
 ## Neck and Head
-### Cascade R-CNN
-
-1. pseudo labeling
-
-    필요한 것
-    - pseudo_labeling.py를 통해 얻은 이미지 폴더
-    - 만들어진 이미지와 matching되는 pseudo labeling된 json file
-    실행 방법
-    ```bash
-    python mmdet_train.py -c mmdet_config/models/swin/swin-t_img-768_AdamW-24e_pseudo_labeling.py
-    ```
-2. normal
-
-    실행 방법
-    ```bash
-    python mmdet_train.py -c mmdet_config/models/swin/swin-t_img-768_AdamW-24e.py
-    ```
-### HTC
-
-  ```bash
-  python mmdet_train.py -c mmdet_config/models/swin/swin-s_fpn_htc_soft-nms_AdamW-2x.py
-  ```
+  - 12 epoch
+  - neck(in_channel = 192, 384, 768, 1536)
+  - Loss
+    - RPN
+      - classification = CELoss
+      - bbox regression = SmoothL1 Loss
+    - RoI Head
+      - classification = CELoss
+      - bbox regression = SmoothL1 Loss
+    - Mask Head : HTC에서 사용하는 Loss, semantic head에서 사용하는 Loss로 두개를 사용합니다
+      - Mask_head = CELoss
+      - semantic_head = CELoss
+  - Optimizer 
+    - AdamW
+      -  lr=0.00015,
+      -  weight_decay=0.05
+     - scheduler
+       - stepLR (8 epoch, 11 epoch)
+       - warmup (ratio = 0.001)
