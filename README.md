@@ -12,8 +12,7 @@
 ## 시연 결과
 <p float="left">
   <img src="/images/0000.jpg" width="250" />
-  <img src="/images/0001.jpg" width="250" />
-  <img src="/images/0002.jpg" width="250" />
+
 </p>
 
 ## Prerequisite
