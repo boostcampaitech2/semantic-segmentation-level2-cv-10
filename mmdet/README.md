@@ -1,4 +1,11 @@
 # MMDetection
+mmdet
+│─inference.py <- inference file
+│─make_crop.py <- original image와 섞기 위한 crop image를 만드는 function들이 존재합니다
+│─mixed_image.py <- original image와 crop image를 섞어 학습 데이터로 사용하기 위한 function들이 존재합니다.
+│─pseudo_labeling.py <- original image와 crop image를 섞어 학습 데이터로 만들어 줍니다.
+│─swin_L384.py <- train dataset을 이용해 학습하는 config file입니다.
+└─swin_L384V2.py <-  swin_L384.py의 구조를 따라가되, pseudo labeling된 image dataset를 포함해 학습하는 config file입니다.
 ## Config
 mmdetection download
 ```

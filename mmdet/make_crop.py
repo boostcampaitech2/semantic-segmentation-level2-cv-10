@@ -195,6 +195,8 @@ def merge_image(insert_image, insert_mask, class_id, base_image=None, base_mask=
     
 
 def make_crop_image(name):
+    # input : model dir path
+    # output : extract_image folder(crop image by category, json file)
     # ------------------------------------------- #
     dataset_path = '/opt/ml/segmentation/input/data/'
     classes = ("General trash", "Paper", "Paper pack", "Metal", "Glass", 
