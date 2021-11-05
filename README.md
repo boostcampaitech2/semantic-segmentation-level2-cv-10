@@ -9,15 +9,15 @@
 ## Overview
 자원의 대부분을 수입하는 우리나라는 특히 자원 재활용이 중요합니다. 국내에서 버려지는 쓰레기종량제 봉투 속을 살펴보면 70%는 재활용이 가능한 자원입니다. 분리수거에 대한 접근성 향상을 위해 딥러닝 모델을 이용해 분리수거를 돕고자 합니다.
 
-## structure
+## Structure
 ```
 semantic-segmentation-level2-cv-10
 ├─images 
-├─mmdet  <- mmdetection 관련 file
-├─mmseg  <- mmsegmentation 관련 file
+├─mmdet  <- mmdetection 관련 폴더
+├─mmseg  <- mmsegmentation 관련 폴더
 │  ├─code 
 │  └─config
-└─utils  <- mmsegmentation input data format 및 ensemble file
+└─utils  <- mmsegmentation input data 생성 및 ensemble 코드
 ```
 ## 시연 결과
 <p float="left">
