@@ -11,13 +11,13 @@
 
 ## 시연 결과
 <p float="left">
-  <img src="/images/0000.png" width="250" />
+  <img src="/images/0000.png" width="500" />
 </p>
 <p float="left">
-  <img src="/images/0001.png" width="250" />
+  <img src="/images/0001.png" width="500" />
 </p>
 <p float="left">
-  <img src="/images/0002.png" width="250" />
+  <img src="/images/0002.png" width="500" />
 </p>
 
 ## Prerequisite
