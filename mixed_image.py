@@ -152,7 +152,55 @@ def make_index(arr):
     rnd_list = rnd_idx.tolist()
     return rnd_idx, rnd_list
 
-if __name__ == "__main__":
+def mediate_bbox(bbox, c, pseudo_masks):
+    min_x = 512
+    max_x = 0
+    min_y = 512
+    max_y = 0
+    xmin, ymin, w, h = bbox
+    xmin = math.floor(xmin)
+    ymin = math.floor(ymin)
+    xmax = min(511, math.ceil(xmin + w))
+    ymax = min(511, math.ceil(ymin + h))
+    #base_image = cv2.rectangle(base_image, (math.floor(xmin), math.floor(ymin)), (math.floor(xmax) , math.floor(ymax)), (255, 255, 255), 3)
+    for jx in range(math.floor(ymin), math.ceil(ymax)+1):
+        for ix in range(math.floor(xmin), math.ceil(xmax)+1):
+            if str(pseudo_masks[jx][ix]) == str(c):
+                if min_x > ix:
+                    min_x = ix
+                break
+    for jx in range(math.floor(ymin), math.ceil(ymax)+1):
+        for ix in range(math.ceil(xmax), math.floor(xmin)-1, -1):
+            if str(pseudo_masks[jx][ix]) == str(c):
+                if max_x < ix:
+                    max_x = ix
+                break
+    for ix in range(math.floor(xmin), math.ceil(xmax)+1):
+        for jx in range(math.floor(ymin), math.ceil(ymax)+1):
+            if str(pseudo_masks[jx][ix]) == str(c):
+                if min_y > jx:
+                    min_y = jx
+                break
+    for ix in range(math.floor(xmin), math.ceil(xmax)+1):
+        for jx in range(math.ceil(ymax), math.floor(ymin)-1, -1):
+            if str(pseudo_masks[jx][ix]) == str(c):
+                if max_y < jx:
+                    max_y = jx
+                break
+    return min_x, min_y, max_x, max_y
+
+def make_miximage():
+    # merge original image and cropimage 
+    # use original train data, use crop image by category
+    # make_miximage need train image folder(train image, mask, .json)
+    #                    crop image by category folder
+    #                       crop image by category folder(10 category = 10 folder) = (train image, mask)
+    #                       .json file
+    #
+    # output : a folder
+    #           - mixed image
+    #           - mask(mixed image)
+    #           - labeling_data.json for mixed image
     class_colormap = pd.read_csv("/opt/ml/segmentation/baseline_code/class_dict.csv")
     color_map_array = class_colormap.iloc[:, 1:].values.astype(np.uint8)
 
@@ -162,14 +210,11 @@ if __name__ == "__main__":
 
     imgIds = coco.getImgIds()
     ImgDir = '/opt/ml/segmentation/input/train_all/'
-    # annImgDir = '/opt/ml/segmentation/input/ann_data'
 
     with open('/opt/ml/segmentation/input/train_all/labeling_data.json', 'r') as f:
         json_data = json.load(f)
     data = copy.deepcopy(json_data)
-    #id_image = data['images'][-1]['id']
-    #id_anno = data['annotations'][-1]['id']
-    #id_image, id_anno
+
     print('complete get original train data!')
     masks = []
     imgNames = []
@@ -191,18 +236,6 @@ if __name__ == "__main__":
         if np.any(np.isin([1, 2, 8, 6], mask)):
             imgNames.append(imgInfo['file_name'])
             masks.append(mask)
-        
-        # mask_list.append(list(np.unique(mask)))
-        # mask_list.update(np.unique(mask))
-        # _file_name = f"{annImgDir}/{imgInfo['file_name']}"
-        # _parent_path = Path(_file_name).parent
-        # if not _parent_path.exists():
-        #     _parent_path.mkdir(parents=True)
-
-        # # plt.imsave(_file_name, color_map_array[mask]) # rgb
-        # plt.imsave(_file_name, mask)
-        # plt.imsave('test_mask.jpg', mask)
-        # plt.imsave('test_mask.png', mask)
 
     data_df = pd.json_normalize(data['annotations'])
 
@@ -270,42 +303,9 @@ if __name__ == "__main__":
                 # bbox for json
                 new_bbox = []
                 for bbox, c in zip(list(data_df.loc[data_df['image_id'] == anno_idx]['bbox']), list(data_df.loc[data_df['image_id'] == anno_idx]['category_id'])):
-                    min_x = 512
-                    max_x = 0
-                    min_y = 512
-                    max_y = 0
-                    xmin, ymin, w, h = bbox
-                    xmin = math.floor(xmin)
-                    ymin = math.floor(ymin)
-                    xmax = min(511, math.ceil(xmin + w))
-                    ymax = min(511, math.ceil(ymin + h))
-                    #base_image = cv2.rectangle(base_image, (math.floor(xmin), math.floor(ymin)), (math.floor(xmax) , math.floor(ymax)), (255, 255, 255), 3)
-                    for jx in range(math.floor(ymin), math.ceil(ymax)+1):
-                        for ix in range(math.floor(xmin), math.ceil(xmax)+1):
-                            if str(pseudo_masks[jx][ix]) == str(c):
-                                if min_x > ix:
-                                    min_x = ix
-                                break
-                    for jx in range(math.floor(ymin), math.ceil(ymax)+1):
-                        for ix in range(math.ceil(xmax), math.floor(xmin)-1, -1):
-                            if str(pseudo_masks[jx][ix]) == str(c):
-                                if max_x < ix:
-                                    max_x = ix
-                                break
-                    for ix in range(math.floor(xmin), math.ceil(xmax)+1):
-                        for jx in range(math.floor(ymin), math.ceil(ymax)+1):
-                            if str(pseudo_masks[jx][ix]) == str(c):
-                                if min_y > jx:
-                                    min_y = jx
-                                break
-                    for ix in range(math.floor(xmin), math.ceil(xmax)+1):
-                        for jx in range(math.ceil(ymax), math.floor(ymin)-1, -1):
-                            if str(pseudo_masks[jx][ix]) == str(c):
-                                if max_y < jx:
-                                    max_y = jx
-                                break
+                    min_x, min_y, max_x, max_y = mediate_bbox(bbox, c, pseudo_masks)
                     #tmp_mask = cv2.rectangle(tmp_mask, (min_x, min_y), (max_x, max_y), (255), 1)
-                    if min_x == 512 and min_y == 512 and max_x == 0 and max_y == 0:
+                    if min_x == 512 and min_y == 512 and max_x == 0 and max_y == 0: # bbox가 잡히지 않을 때
                         pass
                     else:
                         new_bbox.append([list(map(int, [min_x, min_y, max_x - min_x, max_y - min_y])), int(c)])
@@ -322,11 +322,8 @@ if __name__ == "__main__":
                     mask[coco.annToMask(ann) == 1] = c
                     smask = np.where(mask == pseudo_masks, mask, 0)
                     smask_pg = binary_mask_to_polygon(smask)
-                    new_mask.append(smask_pg)
-                #a, b, c, d = new_bbox[-1]
-                #smask = cv2.rectangle(smask, (a, b), (a + c, b + d), (255), 1)
-                #smask = np.where(smask != 0, 205, 0)
-                #          
+                    new_mask.append(smask_pg)      
+                    
                 if len(new_mask) != len(new_bbox):
                     continue
                 #bbox가 가려지는 image는 학습 데이터로 사용하지 않는다.
@@ -352,20 +349,7 @@ if __name__ == "__main__":
                             annocnt)
                 annocnt += 1
                 imgcnt += 1
-                '''except:
-                    pass'''
-                '''fig, axes = plt.subplots(3, 2, figsize=(6, 6), dpi=150)
-                axes[0, 0].imshow(base_image)
-                axes[0, 0].axis("off")
-                axes[0, 1].imshow(pseudo_masks)
-                axes[0, 1].axis("off")
-                axes[1, 0].imshow(tmp_img)
-                axes[1, 0].axis("off")
-                axes[1, 1].imshow(tmp_mask)
-                axes[1, 1].axis("off")
-                axes[2, 0].imshow(smask)
-                axes[2, 0].axis("off")
-                '''
+
     data = valid_json(data)
     with open('/opt/ml/segmentation/merge_image/labeling_data.json', 'w', encoding = 'utf-8') as make_file:
         json.dump(data, make_file, ensure_ascii = False, indent = "\t")
